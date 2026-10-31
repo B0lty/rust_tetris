@@ -14,7 +14,7 @@ const BLUE: u32 = 0x000000ff;
 const BUTTON_BG_COL: u32 = 0x00222244;
 
 fn main() {
-    let mut buffer: [u32; WIDTH * HEIGHT] = [0; WIDTH * HEIGHT];
+    let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
 
     let mut window = Window::new(
         "GUI Template - ESC to exit",
