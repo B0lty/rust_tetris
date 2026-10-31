@@ -66,6 +66,7 @@ fn main() {
     // 5: green
     // 6: purple
     // 7: red
+    // 8: highlighted block
     let mut game_board: [[u8; 10]; 20] = [[0; 10]; 20];
 
     let mut placed_pieces: [[u8; 10]; 20] = [[0; 10]; 20];
@@ -369,11 +370,18 @@ fn main() {
             {
                 let mut game_board_buffer: [[u8; 10]; 20] = [[0; 10]; 20];
 
-                // rendering current tetromino
+                // displaying current tetromino
                 {
+                    let mut block_locations = [[0; 2]; 4];
+
+                    let mut i = 0;
+
                     for pt in current_piece.piece {
                         let x = pt[0];
                         let y = pt[1];
+
+                        block_locations[i][0] = x;
+                        block_locations[i][1] = y;
 
                         if placed_pieces[y as usize][x as usize] != 0 {
                             alive = false;
@@ -381,6 +389,18 @@ fn main() {
 
                         if x >= 0 && x < 10 && y >= 0 && y < 20 {
                             game_board_buffer[y as usize][x as usize] = current_piece.col;
+                        }
+
+                        i += 1;
+                    }
+
+                    // displaying where the tetromino will fall
+                    for pt in block_locations {
+                        let x = pt[0];
+                        for y in pt[1]..20 {
+                            if game_board_buffer[y as usize][x as usize] == 0 {
+                                game_board_buffer[y as usize][x as usize] = 8;
+                            }
                         }
                     }
                 }
@@ -468,9 +488,17 @@ fn main() {
                         buttons::Action::Restart => {
                             alive = true;
 
+                            // resetting game board and next pieces board
                             game_board = [[0; 10]; 20];
                             placed_pieces = [[0; 10]; 20];
+                            // refreshing all tetrominoes in next list
+                            inc_tetromino(&mut next_pieces);
+                            inc_tetromino(&mut next_pieces);
+                            inc_tetromino(&mut next_pieces);
                             current_piece = tetrominoes[inc_tetromino(&mut next_pieces) as usize];
+                            // resetting score
+                            score = 0;
+                            update_score(&mut lables, &score);
                         }
                         _ => (),
                     }
@@ -493,7 +521,7 @@ fn main() {
                     let col: u32;
 
                     match game_board[y][x] {
-                        0 => col = 0x00101010,
+                        0 => col = 0x00202020,
                         1 => col = 0x002bdcfb,
                         2 => col = 0x000000ff,
                         3 => col = 0x00fba82b,
@@ -501,6 +529,7 @@ fn main() {
                         5 => col = 0x0000ff00,
                         6 => col = 0x007100ff,
                         7 => col = 0x00ff0000,
+                        8 => col = 0x00303030,
                         _ => col = 0x00000000,
                     };
 
