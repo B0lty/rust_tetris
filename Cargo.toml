@@ -1,7 +1,9 @@
 [package]
-name = "rust_gui_template"
+name = "rust_tetris"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 minifb = "0.29.0"
+ndarray = "0.17.2"
+rand = "0.10.3"

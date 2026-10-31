@@ -214,7 +214,7 @@ pub fn draw_triangle(
         let ext_pts = find_matching_x_from_2d_arr(&outline_pts, x as i32 + x_min);
         if ext_pts.len() > 1 {
             let mut y_min = ext_pts[0][1].max(0);
-            let mut y_max = ext_pts[0][1].min(WIDTH as i32 - 1);
+            let mut y_max = ext_pts[0][1].min(HEIGHT as i32 - 1);
 
             if y_min > y_max {
                 return;

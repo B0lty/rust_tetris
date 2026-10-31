@@ -7,6 +7,7 @@ use crate::libs::font;
 
 #[derive(Clone)]
 pub enum Action {
+    Restart,
     None,
 }
 
