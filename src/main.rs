@@ -1,5 +1,6 @@
 use minifb::{Key, KeyRepeat, MouseButton, Window, WindowOptions};
 use rand::RngExt;
+use rusty_audio::Audio;
 
 pub mod libs;
 
@@ -184,13 +185,19 @@ fn main() {
 
     let mut alive = true;
 
+    let mut audio = Audio::new();
+    audio.add("move", "src\\assets\\move.wav");
+    audio.add("rotate", "src\\assets\\rotate.wav");
+    audio.add("place", "src\\assets\\place.wav");
+    audio.add("loop", "src\\assets\\loop.wav");
+
     while window.is_open() && !window.is_key_down(Key::Escape) {
         for i in buffer.iter_mut() {
             *i = 0; // Resets all pixels to black
         }
 
         // the game only runs if the player is alive
-        if alive == true {
+        if alive {
             // timer
             {
                 timer_1s += 1;
@@ -207,6 +214,7 @@ fn main() {
                     match key {
                         Key::Up => {
                             current_piece.rotate();
+                            audio.play("rotate");
 
                             let mut out_of_bounds = false;
                             for block in current_piece.piece {
@@ -226,6 +234,8 @@ fn main() {
                             }
                         }
                         Key::Down => {
+                            audio.play("move");
+
                             let mut collided = false;
                             for block in current_piece.piece {
                                 if (block[1] >= 19)
@@ -269,6 +279,7 @@ fn main() {
                         }
                         Key::Right => {
                             current_piece.translate(1, 0);
+                            audio.play("move");
 
                             let mut out_of_bounds = false;
                             for block in current_piece.piece {
@@ -287,6 +298,7 @@ fn main() {
                         }
                         Key::Left => {
                             current_piece.translate(-1, 0);
+                            audio.play("move");
 
                             let mut out_of_bounds = false;
                             for block in current_piece.piece {
@@ -328,6 +340,7 @@ fn main() {
                                 }
                                 current_piece =
                                     tetrominoes[inc_tetromino(&mut next_pieces) as usize];
+                                audio.play("place");
                             }
                         }
                         _ => (),
@@ -422,6 +435,7 @@ fn main() {
                             placed_pieces[block[1] as usize][block[0] as usize] = current_piece.col;
                         }
                         current_piece = tetrominoes[inc_tetromino(&mut next_pieces) as usize];
+                        audio.play("place");
                     } else {
                         current_piece.translate(0, 1);
                     }
