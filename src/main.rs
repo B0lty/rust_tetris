@@ -1,6 +1,9 @@
 use minifb::{Key, KeyRepeat, MouseButton, Window, WindowOptions};
 use rand::RngExt;
+use rodio::Source;
+use rodio::{Decoder, OutputStreamBuilder, Sink};
 use rusty_audio::Audio;
+use std::path::PathBuf;
 
 pub mod libs;
 
@@ -185,11 +188,40 @@ fn main() {
 
     let mut alive = true;
 
+    /// Looks for an `assets` folder next to the executable,
+    /// then falls back to the source tree
+    fn assets_dir() -> PathBuf {
+        if let Ok(exe) = std::env::current_exe() {
+            if let Some(dir) = exe.parent() {
+                let packaged = dir.join("assets");
+                if packaged.is_dir() {
+                    return packaged;
+                }
+            }
+        }
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src")
+            .join("assets")
+    }
+
     let mut audio = Audio::new();
-    audio.add("move", "src\\assets\\move.wav");
-    audio.add("rotate", "src\\assets\\rotate.wav");
-    audio.add("place", "src\\assets\\place.wav");
-    audio.add("loop", "src\\assets\\loop.wav");
+
+    let assets = assets_dir();
+    audio.add("move", assets.join("move.wav"));
+    audio.add("rotate", assets.join("rotate.wav"));
+    audio.add("place", assets.join("place.wav"));
+
+    let music_stream =
+        OutputStreamBuilder::open_default_stream().expect("failed to open default audio stream");
+    let music = Sink::connect_new(music_stream.mixer());
+
+    let music_file = std::fs::File::open(assets.join("loop.wav")).expect("failed to open loop.wav");
+    let music_source = Decoder::try_from(music_file)
+        .expect("failed to decode loop.wav")
+        .repeat_infinite();
+
+    music.append(music_source);
+    music.set_volume(0.5);
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         for i in buffer.iter_mut() {
@@ -214,7 +246,6 @@ fn main() {
                     match key {
                         Key::Up => {
                             current_piece.rotate();
-                            audio.play("rotate");
 
                             let mut out_of_bounds = false;
                             for block in current_piece.piece {
@@ -231,11 +262,11 @@ fn main() {
                                 current_piece.rotate();
                                 current_piece.rotate();
                                 current_piece.rotate();
+                            } else {
+                                audio.play("rotate");
                             }
                         }
                         Key::Down => {
-                            audio.play("move");
-
                             let mut collided = false;
                             for block in current_piece.piece {
                                 if (block[1] >= 19)
@@ -255,6 +286,7 @@ fn main() {
                                     tetrominoes[inc_tetromino(&mut next_pieces) as usize];
                             } else {
                                 current_piece.translate(0, 1);
+                                audio.play("move");
 
                                 let mut collided = false;
                                 for block in current_piece.piece {
@@ -279,7 +311,6 @@ fn main() {
                         }
                         Key::Right => {
                             current_piece.translate(1, 0);
-                            audio.play("move");
 
                             let mut out_of_bounds = false;
                             for block in current_piece.piece {
@@ -294,11 +325,12 @@ fn main() {
                             }
                             if out_of_bounds == true {
                                 current_piece.translate(-1, 0);
+                            } else {
+                                audio.play("move");
                             }
                         }
                         Key::Left => {
                             current_piece.translate(-1, 0);
-                            audio.play("move");
 
                             let mut out_of_bounds = false;
                             for block in current_piece.piece {
@@ -313,6 +345,8 @@ fn main() {
                             }
                             if out_of_bounds == true {
                                 current_piece.translate(1, 0);
+                            } else {
+                                audio.play("move");
                             }
                         }
                         Key::Space => {
